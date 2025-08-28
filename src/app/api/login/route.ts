@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
-  
+
   const ALLOWED_USER = "pakonchai@gmail.com";
   const ALLOWED_PASS = "1234";
 

@@ -13,12 +13,15 @@ import {
   UserRound,
   Menu,
   X,
-  ShieldCheck,
 } from "lucide-react";
 
 function Brand() {
   return (
-    <Link href="/" className="group flex items-center gap-2" aria-label="กลับหน้าแรก MediCare">
+    <Link
+      href="/"
+      className="group flex items-center gap-2"
+      aria-label="กลับหน้าแรก MediCare"
+    >
       <span className="h-9 w-9 grid place-items-center rounded-2xl bg-emerald-50 border border-emerald-200 ring-1 ring-emerald-100 group-hover:ring-emerald-200 transition">
         <Stethoscope className="h-5 w-5 text-emerald-600" />
       </span>
@@ -45,7 +48,9 @@ function AuthButton() {
         <>
           <div className="hidden sm:flex items-center gap-2 text-gray-700">
             <UserRound className="h-4 w-4" />
-            <span className="text-sm">สวัสดี {patientName ?? "คุณผู้ป่วย"}</span>
+            <span className="text-sm">
+              สวัสดี {patientName ?? "คุณผู้ป่วย"}
+            </span>
           </div>
           <button
             onClick={() => logout()}
@@ -57,7 +62,9 @@ function AuthButton() {
         </>
       ) : (
         <button
-          onClick={() => router.push(`/login?redirect=${encodeURIComponent(redirect)}`)}
+          onClick={() =>
+            router.push(`/login?redirect=${encodeURIComponent(redirect)}`)
+          }
           className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99] transition"
           aria-label="เข้าสู่ระบบ"
         >
@@ -76,16 +83,24 @@ function NavTabsDesktop() {
     { href: "/appointments", label: "นัดหมายของฉัน", icon: CalendarClock },
   ];
   return (
-    <nav className="flex w-full gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1" aria-label="เมนูหลัก">
+    <nav
+      className="flex w-full gap-1 rounded-xl border border-gray-200 bg-gray-50 p-1"
+      aria-label="เมนูหลัก"
+    >
       {tabs.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+        const active =
+          pathname === href || (href !== "/" && pathname.startsWith(href));
         return (
           <Link
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
             className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition
-              ${active ? "bg-white border border-gray-200 text-gray-900 shadow-sm" : "text-gray-600 hover:bg-white/80"}`}
+              ${
+                active
+                  ? "bg-white border border-gray-200 text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:bg-white/80"
+              }`}
           >
             <Icon className="h-4 w-4" />
             <span className="hidden sm:inline">{label}</span>
@@ -107,14 +122,19 @@ function NavListMobile({ onNavigate }: { onNavigate?: () => void }) {
     <nav aria-label="เมนูหลัก (มือถือ)">
       <ul className="flex flex-col divide-y divide-gray-100">
         {tabs.map(({ href, label }) => {
-          const active = pathname === href || (href !== "/" && pathname.startsWith(href));
+          const active =
+            pathname === href || (href !== "/" && pathname.startsWith(href));
           return (
             <li key={href}>
               <Link
                 href={href}
                 onClick={onNavigate}
                 className={`block w-full px-1 py-3 text-base
-                  ${active ? "text-emerald-700 font-semibold underline underline-offset-4" : "text-gray-800 hover:text-gray-900"}`}
+                  ${
+                    active
+                      ? "text-emerald-700 font-semibold underline underline-offset-4"
+                      : "text-gray-800 hover:text-gray-900"
+                  }`}
               >
                 {label}
               </Link>
@@ -188,10 +208,15 @@ export default function Header() {
                   <span className="h-8 w-8 grid place-items-center rounded-xl bg-emerald-50 border border-emerald-200">
                     <Stethoscope className="h-4 w-4 text-emerald-600" />
                   </span>
-      <div className="leading-tight">
-              <p className="text-lg font-semibold text-gray-900">Telemedicine</p>
-              <p className="text-[11px] text-gray-500 -mt-0.5">By MediCare</p>
-            </div>                </div>
+                  <div className="leading-tight">
+                    <p className="text-lg font-semibold text-gray-900">
+                      Telemedicine
+                    </p>
+                    <p className="text-[11px] text-gray-500 -mt-0.5">
+                      By MediCare
+                    </p>
+                  </div>{" "}
+                </div>
                 <button
                   onClick={() => setOpen(false)}
                   className="p-2 rounded-xl border border-gray-300 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
@@ -207,14 +232,21 @@ export default function Header() {
               <div className="pb-4">
                 {authed ? (
                   <button
-                    onClick={() => { logout(); setOpen(false); }}
+                    onClick={() => {
+                      logout();
+                      setOpen(false);
+                    }}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-3 text-base font-medium text-gray-800 hover:bg-gray-50"
                   >
                     <LogOut className="h-5 w-5" /> ออกจากระบบ
                   </button>
                 ) : (
                   <button
-                    onClick={() => router.push(`/login?redirect=${encodeURIComponent(redirect)}`)}
+                    onClick={() =>
+                      router.push(
+                        `/login?redirect=${encodeURIComponent(redirect)}`
+                      )
+                    }
                     className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-base font-semibold text-white hover:bg-emerald-700 active:scale-[0.99] transition"
                   >
                     <LogIn className="h-5 w-5" /> เข้าสู่ระบบ

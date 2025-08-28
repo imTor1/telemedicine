@@ -1,177 +1,56 @@
+// AppointmentsPage.tsx
 "use client";
-import { useState, useEffect } from "react";
+import React, { Suspense } from "react";
 import Header from "../components/Header";
-import { useSPA, type Appointment } from "../context/SPAContext";
-import {
-  CalendarClock,
-  Trash2,
-  ChevronDown,
-  Hospital,
-  Video,
-  MapPin,
-  ClipboardList,
-  Phone,
-  ShieldCheck,
-  FileText,
-  CalendarCheck2,
-  AlertCircle,
-} from "lucide-react";
+import { useSPA } from "../context/SPAContext";
 import Link from "next/link";
 
-function formatDateTime(isoString: string) {
-  if (!isoString) return "ไม่มีข้อมูลเวลา";
-  try {
-    return new Date(isoString).toLocaleString("th-TH", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  } catch {
-    return isoString;
+// lazy โหลดการ์ด
+const AppointmentCard = React.lazy(
+  () => import("../components/AppointmentCard")
+);
+
+function CardsList() {
+  const { appointments, cancelAppointment } = useSPA();
+
+  // ✅ empty state
+  if (!appointments || appointments.length === 0) {
+    return (
+      <div className="mt-6 rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
+        <p className="text-gray-600">ยังไม่มีนัดหมาย</p>
+        <Link
+          href="/doctors"
+          className="inline-flex items-center gap-1 text-sm text-emerald-700 hover:underline"
+        >
+          ค้นหาแพทย์เพื่อเริ่มจองนัดหมาย
+        </Link>
+      </div>
+    );
   }
-}
-
-function AppointmentCard({
-  appointment: a,
-  onCancel,
-}: {
-  appointment: Appointment;
-  onCancel: (id: string) => void;
-}) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const INSURANCE_LABELS: Record<Appointment["insurance"], string> = {
-  self: "ชำระเงินเอง",
-  universal: "บัตรทอง / หลักประกันสุขภาพแห่งชาติ",
-  social: "ประกันสังคม",
-  private: "ประกันเอกชน",
-};
-
-  const STATUS_MAP: Record<
-    Appointment["status"],
-    {
-      wrapRing: string;
-      badge: string;
-      dot: string;
-      Icon: React.ComponentType<{ className?: string }>;
-    }
-  > = {
-    ยืนยันแล้ว: {
-      wrapRing: "ring-emerald-100",
-      badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      dot: "bg-emerald-500",
-      Icon: CalendarCheck2,
-    },
-    กำลังจะถึง: {
-      wrapRing: "ring-sky-100",
-      badge: "bg-sky-50 text-sky-700 border-sky-200",
-      dot: "bg-sky-500",
-      Icon: CalendarClock,
-    },
-    รอดำเนินการ: {
-      wrapRing: "ring-amber-100",
-      badge: "bg-amber-50 text-amber-700 border-amber-200",
-      dot: "bg-amber-500",
-      Icon: AlertCircle,
-    },
-  };
-
-  const S = STATUS_MAP[a.status] ?? STATUS_MAP["ยืนยันแล้ว"];
-
-  const detailItems = [
-    {
-      icon: a.visitType === "video" ? Video : Hospital,
-      label: "รูปแบบ",
-      value: a.visitType === "video" ? "วิดีโอคอล" : "ไปที่โรงพยาบาล",
-    },
-    {
-      icon: MapPin,
-      label: "สถานที่",
-      value: `${a.hospital} • ${a.location}`,
-    },
-    { icon: Phone, label: "เบอร์ติดต่อ", value: a.phoneNumber },
-    { icon: ClipboardList, label: "อาการเบื้องต้น", value: a.symptoms },
-    {
-      icon: ShieldCheck,
-      label: "สิทธิ์การรักษา",
-      value: `${INSURANCE_LABELS[a.insurance]}${a.policyId ? ` (${a.policyId})` : ""}`,
-    },
-    ...(a.notes
-      ? [{ icon: FileText, label: "ข้อมูลเพิ่มเติม", value: a.notes }]
-      : []),
-  ];
 
   return (
-    <div
-      className={`relative rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-all ring-1 ${S.wrapRing}`}
-    >
-      <div className="absolute bottom-3 right-3">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${S.badge}`}
-        >
-          <S.Icon className="h-4 w-5" />
-          {a.status}
-        </span>
-      </div>
-
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-gray-900 truncate">{a.doctorName}</p>
-          <p className="text-sm text-emerald-700">{a.specialty}</p>
-          <p className="mt-1 text-sm text-gray-600 flex items-center gap-1.5">
-            <span className={`h-2.5 w-2.5 rounded-full ${S.dot}`} />
-            {formatDateTime(a.datetime)}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            onClick={() => onCancel(a.id)}
-            className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
-          >
-            <ChevronDown
-              className={`h-5 w-5 transition-transform ${
-                isExpanded ? "rotate-180" : ""
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-          <h4 className="font-medium text-sm text-gray-800">
-            รายละเอียดการนัดหมาย
-          </h4>
-          {detailItems.map((item) => (
-            <div key={item.label} className="flex items-start gap-3 text-sm">
-              <item.icon className="h-4 w-4 mt-0.5 shrink-0 text-gray-500" />
-              <div className="min-w-0">
-                <p className="text-gray-500">{item.label}</p>
-                <p className="text-gray-800 break-words">{item.value}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="mt-6 grid gap-4">
+      {appointments
+        .sort(
+          (a, b) =>
+            new Date(b.datetime).getTime() - new Date(a.datetime).getTime()
+        )
+        .map((a) => (
+          <AppointmentCard
+            key={a.id}
+            appointment={a}
+            onCancel={cancelAppointment}
+          />
+        ))}
     </div>
   );
 }
 
 export default function AppointmentsPage() {
-  const { authed, appointments, cancelAppointment, fetchAppointments } =
-    useSPA();
-  const [loading, setLoading] = useState(true);
+  const { authed, fetchAppointments } = useSPA();
+  const [loading, setLoading] = React.useState(true);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (authed) {
       setLoading(true);
       fetchAppointments().finally(() => setLoading(false));
@@ -182,44 +61,29 @@ export default function AppointmentsPage() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="mx-auto max-w-4xl px-4 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          นัดหมายของฉัน
-        </h1>
+        <h1 className="text-2xl md:text-3xl font-bold">นัดหมายของฉัน</h1>
 
         {!authed ? (
-          <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 text-center">
-            <p className="text-gray-700">
-              กรุณาเข้าสู่ระบบเพื่อดูและจัดการนัดหมายของคุณ
-            </p>
+          <div className="mt-6 rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
+            <p>กรุณาเข้าสู่ระบบเพื่อดูและจัดการนัดหมายของคุณ</p>
           </div>
         ) : loading ? (
           <p className="mt-6 text-center text-gray-500">กำลังโหลดนัดหมาย...</p>
-        ) : appointments.length === 0 ? (
-          <div className="mt-6 rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center">
-            <p className="text-gray-600">ยังไม่มีนัดหมาย</p>
-            <Link
-              href="/doctors"
-              className="inline-flex items-center gap-1 text-sm text-emerald-700 hover:underline"
-            >
-              ค้นหาแพทย์เพื่อเริ่มจองนัดหมาย
-            </Link>
-          </div>
         ) : (
-          <div className="mt-6 grid gap-4">
-            {appointments
-              .sort(
-                (a, b) =>
-                  new Date(b.datetime).getTime() -
-                  new Date(a.datetime).getTime()
-              )
-              .map((a) => (
-                <AppointmentCard
-                  key={a.id}
-                  appointment={a}
-                  onCancel={cancelAppointment}
-                />
-              ))}
-          </div>
+          <Suspense
+            fallback={
+              <div className="mt-6 grid gap-4">
+                {[...Array()].map((_, i) => (
+                  <div
+                    key={i}
+                    className="mt-6 rounded-2xl border-2 border-dashed border-gray-200 bg-white p-8 text-center"
+                  />
+                ))}
+              </div>
+            }
+          >
+            <CardsList />
+          </Suspense>
         )}
       </main>
     </div>

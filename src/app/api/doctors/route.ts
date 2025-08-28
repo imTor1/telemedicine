@@ -10,7 +10,10 @@ export async function GET(req: Request) {
     const isSpecialtyMatch =
       !spec || spec === "ทั้งหมด" || d.specialty === spec;
 
-    const text = [d.name, d.hospital, d.location].filter(Boolean).join(" ").toLowerCase();
+    const text = [d.name, d.hospital, d.location]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
     const isKeywordMatch = !keyword || text.includes(keyword);
 
     return isSpecialtyMatch && isKeywordMatch;

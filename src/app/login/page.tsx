@@ -1,8 +1,17 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
 import { useSPA } from "../context/SPAContext";
-import { Mail, Lock, Eye, EyeOff, LogIn, ShieldCheck, AlertCircle } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  ShieldCheck,
+  AlertCircle,
+} from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +31,7 @@ export default function LoginPage() {
   }, [authed, redirect, router]);
 
   const emailValid = /.+@.+\..+/.test(email);
-  const pwValid = password.length >= 3; 
+  const pwValid = password.length >= 3;
   const formValid = emailValid && pwValid && !loading;
 
   async function handleSubmitLogin(e: React.FormEvent) {
@@ -32,25 +41,27 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const users = { email, password };
-
       const res = await fetch(`/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(users),
       });
-      const data = await res.json().catch(() => undefined as any);
-      if (!res.ok) {
-        throw new Error(data?.error || "เข้าสู่ระบบไม่สำเร็จ");
-      }
+      const data = await res.json().catch(() => undefined);
+      if (!res.ok) throw new Error(data?.error || "เข้าสู่ระบบไม่สำเร็จ");
 
       if (data?.token) localStorage.setItem("token", data.token);
       const displayName = data?.user?.name ?? email.split("@")[0];
       login(displayName);
-
       router.replace(redirect);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[Login] Error:", err);
-      setError(err?.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "เกิดข้อผิดพลาด กรุณาลองใหม่";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -58,15 +69,30 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.08),transparent_45%)] grid place-items-center">
+      <Suspense
+        fallback={
+          <div className="fixed top-0 left-0 right-0 h-14 bg-white/50" />
+        }
+      ></Suspense>
+
       <main className="w-full max-w-md px-4">
         <div className="text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">เข้าสู่ระบบ</h1>
-          <p className="mt-2 text-gray-600">ลงชื่อเข้าใช้เพื่อจองนัดและดูรายการนัดหมายของคุณ</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            เข้าสู่ระบบ
+          </h1>
+          <p className="mt-2 text-gray-600">
+            ลงชื่อเข้าใช้เพื่อจองนัดและดูรายการนัดหมายของคุณ
+          </p>
         </div>
 
         <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <form onSubmit={handleSubmitLogin} noValidate>
-            <label className="block text-sm font-medium text-gray-700" htmlFor="email">อีเมล</label>
+            <label
+              className="block text-sm font-medium text-gray-700"
+              htmlFor="email"
+            >
+              อีเมล
+            </label>
             <div className="mt-1 relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -84,7 +110,12 @@ export default function LoginPage() {
               <p className="mt-1 text-xs text-red-600">รูปแบบอีเมลไม่ถูกต้อง</p>
             )}
 
-            <label className="block mt-4 text-sm font-medium text-gray-700" htmlFor="password">รหัสผ่าน</label>
+            <label
+              className="block mt-4 text-sm font-medium text-gray-700"
+              htmlFor="password"
+            >
+              รหัสผ่าน
+            </label>
             <div className="mt-1 relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -104,7 +135,11 @@ export default function LoginPage() {
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 hover:bg-gray-100"
                 aria-label={showPw ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
               >
-                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPw ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
 
@@ -124,9 +159,25 @@ export default function LoginPage() {
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
                 </svg>
               ) : (
                 <LogIn className="h-4 w-4" />

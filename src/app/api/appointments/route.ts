@@ -4,7 +4,7 @@ export type BookingPayload = {
   doctorId: string | number;
   doctorName: string;
   specialty: string;
-  datetime: string; 
+  datetime: string;
   visitType: "onsite" | "video";
   phoneNumber: string;
   symptoms: string;
@@ -18,11 +18,10 @@ export type BookingPayload = {
 export type Appointment = BookingPayload & {
   id: string;
   status: "ยืนยันแล้ว" | "กำลังจะถึง" | "รอดำเนินการ";
-  createdAt: string; 
+  createdAt: string;
 };
 
-
-let APPOINTMENTS: Appointment[] = [];
+const APPOINTMENTS: Appointment[] = [];
 
 export const dynamic = "force-dynamic";
 
@@ -33,13 +32,21 @@ function bad(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status });
 }
 function genId() {
-  return (globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2));
+  return (
+    globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
+  );
 }
 
-function validate(body: any): { valid: boolean; msg?: string } {
+function validate(body: unknown): { valid: boolean; msg?: string } {
   if (!body) return { valid: false, msg: "ไม่มีข้อมูล" };
   const {
-    doctorName, datetime, visitType, phoneNumber, symptoms, insurance, policyId,
+    doctorName,
+    datetime,
+    visitType,
+    phoneNumber,
+    symptoms,
+    insurance,
+    policyId,
   } = body as BookingPayload;
 
   if (!datetime) return { valid: false, msg: "เวลานัดห้ามว่าง" };
@@ -60,12 +67,13 @@ function validate(body: any): { valid: boolean; msg?: string } {
   if (insurance !== "self" && String(policyId || "").trim().length < 3)
     return { valid: false, msg: "กรุณากรอกเลขกรมธรรม์/สิทธิ์ประกัน" };
 
-  if (isNaN(Date.parse(datetime))) return { valid: false, msg: "รูปแบบเวลานัดไม่ถูกต้อง" };
+  if (isNaN(Date.parse(datetime)))
+    return { valid: false, msg: "รูปแบบเวลานัดไม่ถูกต้อง" };
 
   return { valid: true };
 }
 
-export function randomStatus(): "ยืนยันแล้ว"  | "รอดำเนินการ" {
+export function randomStatus(): "ยืนยันแล้ว" | "รอดำเนินการ" {
   const statuses = ["ยืนยันแล้ว", "รอดำเนินการ"] as const;
   const idx = Math.floor(Math.random() * statuses.length);
   return statuses[idx];
@@ -96,7 +104,10 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") || "").toLowerCase().trim();
-  const limit = Math.max(1, Math.min(Number(searchParams.get("limit")) || 100, 200));
+  const limit = Math.max(
+    1,
+    Math.min(Number(searchParams.get("limit")) || 100, 200)
+  );
 
   let data = APPOINTMENTS;
 
@@ -117,11 +128,12 @@ export async function GET(req: Request) {
     });
   }
 
-  data = data.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit);
+  data = data
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, limit);
 
   return ok({ items: data, total: data.length });
 }
-
 
 export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -130,7 +142,8 @@ export async function DELETE(req: Request) {
   if (!id) return bad("ต้องระบุ id ของนัดที่ต้องการลบ");
 
   const idx = APPOINTMENTS.findIndex((a) => a.id === id);
-  if (idx === -1) return NextResponse.json({ error: "ไม่พบนัดหมายนี้" }, { status: 404 });
+  if (idx === -1)
+    return NextResponse.json({ error: "ไม่พบนัดหมายนี้" }, { status: 404 });
 
   const [removed] = APPOINTMENTS.splice(idx, 1);
   return ok({ success: true, removedId: removed.id });

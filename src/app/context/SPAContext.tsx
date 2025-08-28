@@ -13,7 +13,7 @@ export type Appointment = {
   doctorId: string | number;
   doctorName: string;
   specialty: string;
-  datetime: string; 
+  datetime: string;
   status: "ยืนยันแล้ว" | "กำลังจะถึง" | "รอดำเนินการ";
   visitType: "onsite" | "video";
   phoneNumber: string;
@@ -31,7 +31,9 @@ export type SPAState = {
   appointments: Appointment[];
   login: (name?: string) => void;
   logout: () => void;
-  bookAppointment: (args: Omit<Appointment, "id" | "status">) => Promise<Appointment>;
+  bookAppointment: (
+    args: Omit<Appointment, "id" | "status">
+  ) => Promise<Appointment>;
   cancelAppointment: (id: string) => void;
   fetchAppointments: (opts?: { q?: string; limit?: number }) => Promise<void>;
 };
@@ -90,67 +92,73 @@ export function SPAProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
-  const bookAppointment: SPAState["bookAppointment"] = useCallback(async (payload) => {
-    const localAppt: Appointment = {
-      id: uid(),
-      status: "รอดำเนินการ", 
-      ...payload,
-    };
+  const bookAppointment: SPAState["bookAppointment"] = useCallback(
+    async (payload) => {
+      const localAppt: Appointment = {
+        id: uid(),
+        status: "รอดำเนินการ",
+        ...payload,
+      };
 
-    try {
-      const res = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        cache: "no-store",
-      });
+      try {
+        const res = await fetch("/api/appointments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          cache: "no-store",
+        });
 
-      if (res.ok) {
-        const serverAppt = (await res.json()) as Appointment;
-        setAppointments((prev) => [serverAppt, ...prev]);
-        return serverAppt;
+        if (res.ok) {
+          const serverAppt = (await res.json()) as Appointment;
+          setAppointments((prev) => [serverAppt, ...prev]);
+          return serverAppt;
+        }
+
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || "ไม่สามารถจองได้");
+      } catch {
+        setAppointments((prev) => [localAppt, ...prev]);
+        return localAppt;
       }
-
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || "ไม่สามารถจองได้");
-    } catch {
-      setAppointments((prev) => [localAppt, ...prev]);
-      return localAppt;
-    }
-  }, []);
+    },
+    []
+  );
 
   const cancelAppointment = useCallback(async (id: string) => {
-  try {
-    const res = await fetch(`/api/appointments?id=${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      cache: "no-store",
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error || "ลบนัดหมายไม่สำเร็จ");
-    }
-  } finally {
-    setAppointments((prev) => prev.filter((a) => a.id !== id));
-  }
-}, []);
-
-
-  const fetchAppointments: SPAState["fetchAppointments"] = useCallback(async (opts) => {
     try {
-      const params = new URLSearchParams();
-      if (opts?.q) params.set("q", opts.q);
-      if (opts?.limit) params.set("limit", String(opts.limit));
-      const url = `/api/appointments${params.toString() ? `?${params}` : ""}`;
-      const res = await fetch(url, { method: "GET", cache: "no-store" });
-      const data = await res.json();
-              
-      if (res.ok && Array.isArray(data.items)) {
-        setAppointments(data.items as Appointment[]);
+      const res = await fetch(
+        `/api/appointments?id=${encodeURIComponent(id)}`,
+        {
+          method: "DELETE",
+          cache: "no-store",
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || "ลบนัดหมายไม่สำเร็จ");
       }
-    } catch {}
+    } finally {
+      setAppointments((prev) => prev.filter((a) => a.id !== id));
+    }
   }, []);
 
-  
+  const fetchAppointments: SPAState["fetchAppointments"] = useCallback(
+    async (opts) => {
+      try {
+        const params = new URLSearchParams();
+        if (opts?.q) params.set("q", opts.q);
+        if (opts?.limit) params.set("limit", String(opts.limit));
+        const url = `/api/appointments${params.toString() ? `?${params}` : ""}`;
+        const res = await fetch(url, { method: "GET", cache: "no-store" });
+        const data = await res.json();
+
+        if (res.ok && Array.isArray(data.items)) {
+          setAppointments(data.items as Appointment[]);
+        }
+      } catch {}
+    },
+    []
+  );
 
   useEffect(() => {
     if (ready && authed) {
@@ -169,12 +177,20 @@ export function SPAProvider({ children }: { children: React.ReactNode }) {
       cancelAppointment,
       fetchAppointments,
     }),
-    [authed, patientName, appointments, login, logout, bookAppointment, cancelAppointment, fetchAppointments]
+    [
+      authed,
+      patientName,
+      appointments,
+      login,
+      logout,
+      bookAppointment,
+      cancelAppointment,
+      fetchAppointments,
+    ]
   );
 
   return <SPAContext.Provider value={value}>{children}</SPAContext.Provider>;
 }
-
 
 export function useSPA() {
   const ctx = useContext(SPAContext);
