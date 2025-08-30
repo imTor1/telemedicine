@@ -1,9 +1,9 @@
-#สามารถเข้าไปดูที่ deploy ผ่าน vercel ได้เลย
+# สามารถเข้าไปดูที่ deploy ผ่าน vercel ได้เลย
 https://telemedicine-six.vercel.app/
 
 
 # ถ้าต้องการรัน web แบบ localhost
-# ที่โฟลเดอร์ root ของโปรเจกต์
+ที่โฟลเดอร์ root ของโปรเจกต์
 npm i 
 
 # Run Project
